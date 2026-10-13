@@ -1,0 +1,144 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "publicIndex": {
+      ".read": "auth != null",
+      "$code": {
+        ".write": "auth != null && (((!data.exists() && newData.child('masterUid').val() === auth.uid) || data.child('masterUid').val() === auth.uid) || (!newData.exists() && root.child('rooms').child($code).child('presence').numChildren() == 0 && root.child('cleanupQueue').child($code).child('emptySince').isNumber() && root.child('cleanupQueue').child($code).child('emptySince').val() <= now - 600000))",
+        "playerCount": {
+          ".write": "auth != null && root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid",
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10"
+        }
+      }
+    },
+    "rooms": {
+      "$code": {
+        ".write": "auth != null && !newData.exists() && data.child('presence').numChildren() == 0 && root.child('cleanupQueue').child($code).child('emptySince').isNumber() && root.child('cleanupQueue').child($code).child('emptySince').val() <= now - 600000",
+        "public": {
+          ".read": "auth != null",
+          "meta": {
+            ".write": "auth != null && ((!data.exists() && newData.child('masterUid').val() === auth.uid) || data.child('masterUid').val() === auth.uid)"
+          },
+          "settings": {
+            ".read": "auth != null",
+            ".write": "auth != null && root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid"
+          },
+          "players": {
+            ".read": "auth != null",
+            "$uid": {
+              ".read": "auth != null",
+              ".write": "auth != null && ((auth.uid === $uid && (!newData.exists() || data.exists() || (root.child('rooms').child($code).child('public').child('meta').child('status').val() === 'open' && root.child('rooms').child($code).child('public').child('players').numChildren() < root.child('rooms').child($code).child('public').child('settings').child('maxPlayers').val() && (root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid || root.child('rooms').child($code).child('public').child('meta').child('visibility').val() !== 'private' || root.child('rooms').child($code).child('access').child('attempts').child($uid).child('password').val() === root.child('rooms').child($code).child('access').child('password').val())))) || root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid)"
+            }
+          },
+          "game": {
+            ".read": "auth != null",
+            ".write": "auth != null && root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid"
+          }
+        },
+        "host": {
+          "game": {
+            ".read": "auth != null && root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid",
+            ".write": "auth != null && root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid"
+          }
+        },
+        "secrets": {
+          "$uid": {
+            ".read": "auth != null && auth.uid === $uid",
+            ".write": "auth != null && root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid"
+          }
+        },
+        "access": {
+          "password": {
+            ".read": "auth != null && root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid",
+            ".write": "auth != null && root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid"
+          },
+          "attempts": {
+            "$uid": {
+              ".read": "auth != null && (auth.uid === $uid || root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid)",
+              ".write": "auth != null && auth.uid === $uid && newData.child('password').val() === root.child('rooms').child($code).child('access').child('password').val()"
+            }
+          }
+        },
+        "actions": {
+          "wordChoices": {
+            "$key": {
+              ".read": "auth != null && root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid",
+              "$uid": {
+                ".read": "auth != null && (auth.uid === $uid || root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid)",
+                ".write": "auth != null && root.child('rooms').child($code).child('public').child('players').child(auth.uid).exists() && ((auth.uid === $uid && !data.exists() && root.child('rooms').child($code).child('public').child('game').child('phase').val() === 'playing') || root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid)"
+              }
+            },
+            ".write": "auth != null && root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid"
+          },
+          "votes": {
+            "$key": {
+              ".read": "auth != null && root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid",
+              "$uid": {
+                ".read": "auth != null && (auth.uid === $uid || root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid)",
+                ".write": "auth != null && root.child('rooms').child($code).child('public').child('players').child(auth.uid).exists() && ((auth.uid === $uid && !data.exists() && root.child('rooms').child($code).child('public').child('game').child('phase').val() === 'vote') || root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid)"
+              }
+            },
+            ".write": "auth != null && root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid"
+          },
+          "quickVotes": {
+            "$gameId": {
+              ".read": "auth != null && root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid",
+              "$uid": {
+                ".read": "auth != null && (auth.uid === $uid || root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid)",
+                ".write": "auth != null && root.child('rooms').child($code).child('public').child('players').child(auth.uid).exists() && ((auth.uid === $uid && !data.exists() && root.child('rooms').child($code).child('public').child('game').child('phase').val() === 'quickVote') || root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid)"
+              }
+            },
+            ".write": "auth != null && root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid"
+          },
+          "quickVoteProposal": {
+            "$gameId": {
+              ".read": "auth != null && root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid",
+              "$uid": {
+                ".read": "auth != null && (auth.uid === $uid || root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid)",
+                ".write": "auth != null && auth.uid === $uid && !data.exists() && root.child('rooms').child($code).child('public').child('players').child(auth.uid).exists() && root.child('rooms').child($code).child('public').child('game').child('phase').val() === 'playing' && root.child('rooms').child($code).child('public').child('settings').child('quickVote').val() === true"
+              }
+            },
+            ".write": "auth != null && root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid"
+          },
+          "playAgain": {
+            "$gameId": {
+              ".read": "auth != null && root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid",
+              "$uid": {
+                ".read": "auth != null && (auth.uid === $uid || root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid)",
+                ".write": "auth != null && auth.uid === $uid && !data.exists() && root.child('rooms').child($code).child('public').child('players').child(auth.uid).exists() && root.child('rooms').child($code).child('public').child('game').child('phase').val() === 'results'"
+              }
+            },
+            ".write": "auth != null && root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid"
+          },
+          "readyToPlay": {
+            "$gameId": {
+              ".read": "auth != null && root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid",
+              "$uid": {
+                ".read": "auth != null && (auth.uid === $uid || root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid)",
+                ".write": "auth != null && auth.uid === $uid && !data.exists() && root.child('rooms').child($code).child('public').child('players').child(auth.uid).exists() && root.child('rooms').child($code).child('public').child('game').child('phase').val() === 'playing' && root.child('rooms').child($code).child('public').child('game').child('turnReady').val() === false"
+              },
+              ".write": "auth != null && root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid"
+            }
+          }
+        },
+        "presence": {
+          ".read": "auth != null",
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid",
+            ".validate": "!newData.exists() || newData.hasChildren()"
+          }
+        }
+      }
+    },
+    "cleanupQueue": {
+      ".read": "auth != null",
+      "$code": {
+        "emptySince": {
+          ".write": "auth != null && (root.child('rooms').child($code).child('presence').child(auth.uid).exists() || root.child('rooms').child($code).child('public').child('meta').child('masterUid').val() === auth.uid || (root.child('rooms').child($code).child('presence').numChildren() == 0 && (!newData.exists() || (newData.isNumber() && newData.val() <= now && newData.val() >= now - 10000))) || (root.child('rooms').child($code).child('presence').numChildren() > 0 && !newData.exists()))",
+          ".validate": "!newData.exists() || (newData.isNumber() && newData.val() <= now)"
+        }
+      }
+    }
+  }
+}
